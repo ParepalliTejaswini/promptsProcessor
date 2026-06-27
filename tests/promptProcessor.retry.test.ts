@@ -3,15 +3,16 @@ import { create429ThenSuccessFetch } from './helpers/mockFetch';
 
 vi.mock('../src/config', () => ({
   config: {
+    maxConcurrency: 5,
     maxRetries: 3,
     maxRequestsPerSecond: 100,
     requestTimeoutMs: 30_000,
   },
 }));
 
-import { MockAiClient } from '../src/clients/mockAiClient';
+import { PromptProcessor } from '../src/processors/promptProcessor';
 
-describe('MockAiClient 429 retry and backoff', () => {
+describe('PromptProcessor 429 retry and backoff', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -30,13 +31,13 @@ describe('MockAiClient 429 retry and backoff', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const client = new MockAiClient('http://localhost:3000');
-    const resultPromise = client.complete({ id: 'prompt-1', text: 'hello' });
+    const processor = new PromptProcessor('http://localhost:3000');
+    const resultPromise = processor.processBatch([{ id: 'prompt-1', text: 'hello' }]);
 
     await vi.advanceTimersByTimeAsync(1_000);
     await vi.advanceTimersByTimeAsync(2_000);
 
-    const result = await resultPromise;
+    const [result] = await resultPromise;
 
     expect(result.status).toBe('success');
     expect(result.output).toBe('Mock response for: hello');
@@ -52,10 +53,10 @@ describe('MockAiClient 429 retry and backoff', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const client = new MockAiClient('http://localhost:3000');
-    const resultPromise = client.complete({ id: 'prompt-1', text: 'hello' });
+    const processor = new PromptProcessor('http://localhost:3000');
+    const resultPromise = processor.processBatch([{ id: 'prompt-1', text: 'hello' }]);
 
-    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(0);
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
     await vi.advanceTimersByTimeAsync(999);
@@ -70,7 +71,7 @@ describe('MockAiClient 429 retry and backoff', () => {
     await vi.advanceTimersByTimeAsync(1);
     expect(fetchMock).toHaveBeenCalledTimes(3);
 
-    const result = await resultPromise;
+    const [result] = await resultPromise;
     expect(result.status).toBe('success');
     expect(result.attemptCount).toBe(3);
   });
@@ -83,14 +84,14 @@ describe('MockAiClient 429 retry and backoff', () => {
     }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const client = new MockAiClient('http://localhost:3000');
-    const resultPromise = client.complete({ id: 'prompt-1', text: 'hello' });
+    const processor = new PromptProcessor('http://localhost:3000');
+    const resultPromise = processor.processBatch([{ id: 'prompt-1', text: 'hello' }]);
 
     await vi.advanceTimersByTimeAsync(1_000);
     await vi.advanceTimersByTimeAsync(2_000);
     await vi.advanceTimersByTimeAsync(4_000);
 
-    const result = await resultPromise;
+    const [result] = await resultPromise;
 
     expect(result.status).toBe('rate_limited');
     expect(result.error).toBe('Rate limit exceeded');
