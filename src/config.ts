@@ -13,4 +13,6 @@ export const config = {
   mockMaxDelayMs: Number(process.env.MOCK_MAX_DELAY_MS ?? 600),
   mockFailureRate: Number(process.env.MOCK_FAILURE_RATE ?? 0.05),
   mockServerRateLimit: Number(process.env.MOCK_SERVER_RATE_LIMIT ?? 5),
+  databasePath: process.env.DATABASE_PATH ?? path.join(projectRoot, 'data', 'inferences.db'),
+  outputDir: process.env.OUTPUT_DIR ?? path.join(projectRoot, 'data', 'outputs'),
 };

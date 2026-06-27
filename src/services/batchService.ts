@@ -3,6 +3,8 @@ import { BatchAcknowledgement, BatchJob, Prompt } from '../types';
 import { readPromptsFromFile } from '../readers/fileReader';
 import { PromptProcessor } from '../processors/promptProcessor';
 import { aggregateResults } from '../aggregators/resultAggregator';
+import { buildSuccessOutput } from '../aggregators/successOutputBuilder';
+import { saveBatchOutput } from '../db/localDatabase';
 import { config } from '../config';
 
 const jobs = new Map<string, BatchJob>();
@@ -59,6 +61,15 @@ function startBackgroundProcessing(
       job.result = aggregateResults(prompts, results);
       job.status = 'completed';
       job.completedAt = new Date().toISOString();
+
+      const successOutput = buildSuccessOutput(
+        batchId,
+        job.source,
+        prompts,
+        job.result,
+        job.completedAt,
+      );
+      job.outputFile = saveBatchOutput(successOutput);
     } catch (error) {
       job.status = 'failed';
       job.error = error instanceof Error ? error.message : 'Processing failed';

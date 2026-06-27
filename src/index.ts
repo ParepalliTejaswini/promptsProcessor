@@ -2,6 +2,9 @@ import express from 'express';
 import { config } from './config';
 import { ingestBatchFromDefaultFile, getBatchJob } from './services/batchService';
 import { mockCompleteHandler } from './mock/mockHandler';
+import { initLocalDatabase, getBatchOutputDocument } from './db/localDatabase';
+
+initLocalDatabase();
 
 const app = express();
 app.use(express.json());
@@ -34,6 +37,17 @@ app.get('/batches/:batchId', (req, res) => {
   }
 
   res.json(job);
+});
+
+app.get('/batches/:batchId/output', (req, res) => {
+  const output = getBatchOutputDocument(req.params.batchId);
+
+  if (!output) {
+    res.status(404).json({ error: 'Output not found. Batch may still be running or failed.' });
+    return;
+  }
+
+  res.json(output);
 });
 
 app.listen(config.port, () => {

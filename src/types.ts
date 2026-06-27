@@ -27,6 +27,31 @@ export interface AggregatedResult {
   results: PromptResult[];
 }
 
+export interface SuccessfulInference {
+  promptId: string;
+  promptText: string;
+  output: string;
+  latencyMs: number;
+  attemptCount: number;
+  completedAt: string;
+}
+
+export interface BatchOutputSummary {
+  total: number;
+  succeeded: number;
+  failed: number;
+  rateLimited: number;
+  avgLatencyMs: number;
+}
+
+export interface BatchOutputDocument {
+  batchId: string;
+  completedAt: string;
+  source: string;
+  summary: BatchOutputSummary;
+  inferences: SuccessfulInference[];
+}
+
 export type BatchStatus = 'pending' | 'running' | 'completed' | 'failed';
 
 export interface BatchJob {
@@ -39,6 +64,7 @@ export interface BatchJob {
   completedAt?: string;
   error?: string;
   result?: AggregatedResult;
+  outputFile?: string;
 }
 
 export interface BatchAcknowledgement {
