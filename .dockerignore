@@ -8,7 +8,6 @@ npm-debug.log*
 coverage
 tests
 vitest.config.ts
-tsconfig.json
 README.md
 diagram.md
 image.png
